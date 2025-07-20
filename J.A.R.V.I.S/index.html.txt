@@ -7,13 +7,33 @@
   <style>
     body, html { margin:0; padding:0; overflow:hidden; background:#000; }
     canvas { display:block; width:100vw; height:100vh; touch-action: none; }
+    .hud-button {
+      position: absolute;
+      bottom: 20px;
+      width: 50px;
+      height: 50px;
+      font-size: 24px;
+      color: #00ffc8;
+      background: rgba(0, 255, 200, 0.1);
+      border: 2px solid #00ffc8;
+      border-radius: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+    #inc { right: 20px; }
+    #dec { right: 90px; }
   </style>
 </head>
 <body>
   <canvas id="hud"></canvas>
+  <button id="inc" class="hud-button">+</button>
+  <button id="dec" class="hud-button">–</button>
+
   <script>
     const canvas = document.getElementById('hud');
     const ctx = canvas.getContext('2d');
+    const btnInc = document.getElementById('inc');
+    const btnDec = document.getElementById('dec');
 
     // --- State & config ---
     let energyLevel = 75;          // %
@@ -21,9 +41,17 @@
     let powerConsumption = 500;    // kW
     let showArm = false;           // hologram toggle
     const armImg = new Image();
-    armImg.src = 'ironman_arm.png'; // put your arm image here
+    armImg.src = 'ironman_arm.png';
     let armLoaded = false;
     armImg.onload = () => armLoaded = true;
+
+    // Button handlers
+    btnInc.addEventListener('click', () => {
+      rotationSpeed = Math.min(rotationSpeed + 0.1, 5);
+    });
+    btnDec.addEventListener('click', () => {
+      rotationSpeed = Math.max(rotationSpeed - 0.1, 0);
+    });
 
     function resize() {
       canvas.width = window.innerWidth;
@@ -32,7 +60,7 @@
     window.addEventListener('resize', resize);
     resize();
 
-    // Toggle on click or touch
+    // Toggle hologram
     function toggleArm() { showArm = !showArm; }
     canvas.addEventListener('click', toggleArm);
     canvas.addEventListener('touchstart', e => {
@@ -45,11 +73,9 @@
       const step = 50;
       ctx.strokeStyle = 'rgba(0,255,200,0.1)';
       ctx.lineWidth = 0.5;
-      for (let x = 0; x < canvas.width; x += step) {
-        for (let y = 0; y < canvas.height; y += step) {
+      for (let x = 0; x < canvas.width; x += step)
+        for (let y = 0; y < canvas.height; y += step)
           ctx.strokeRect(x, y, step, step);
-        }
-      }
     }
 
     function drawArcReactor(ts) {
@@ -122,8 +148,8 @@
 
       ctx.save();
       ctx.translate(cx, cy);
-      ctx.rotate(Math.sin(angle)*0.2);            // gentle oscillation
-      ctx.globalAlpha = 0.5;                      // translucent
+      ctx.rotate(Math.sin(angle)*0.2);
+      ctx.globalAlpha = 0.5;
       ctx.drawImage(armImg, -w/2, -h/2, w, h);
       ctx.globalAlpha = 1;
       ctx.restore();
@@ -138,7 +164,7 @@
       ctx.fillText(`TIME: ${now.toLocaleTimeString('en-US',{hour12:false})}`, 20, 60);
 
       ctx.fillText('ENERGY LEVEL : ' + energyLevel + '%', 20, 100);
-      ctx.fillText('ROTATION      : ' + rotationSpeed + ' rev/sec', 20, 125);
+      ctx.fillText('ROTATION      : ' + rotationSpeed.toFixed(1) + ' rev/sec', 20, 125);
       ctx.fillText('POWER CONSUMP.: ' + powerConsumption + ' kW', 20, 150);
 
       ctx.fillText('NOTIFICATIONS:', 20, 200);
@@ -146,7 +172,7 @@
       ctx.fillText('- Repulsors charged', 20, 250);
 
       ctx.fillText('EMAIL: tony@starkindustries.com', 20, canvas.height-30);
-      ctx.fillText('-- JARVIS HUD v1.2', 20, canvas.height-10);
+      ctx.fillText('-- JARVIS HUD v1.3', 20, canvas.height-10);
     }
 
     // --- Main loop ---
@@ -163,4 +189,3 @@
   </script>
 </body>
 </html>
-
