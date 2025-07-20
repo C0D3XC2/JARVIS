@@ -14,7 +14,7 @@
     #notepad {
       top: 20px;
       right: 20px;
-      width: 40vw;
+      width: 30vw;
       height: 70vh;
       border: 2px solid #00ffc8;
       background: rgba(0,0,0,0.2);
@@ -42,7 +42,7 @@
     /* Eraser below notepad */
     #eraser {
       right: 20px;
-      top: calc(20px + 60vh + 10px);
+      top: calc(20px + 60vh + 20px);
       width: auto;
       padding: 0 12px;
       font-size: 16px;
