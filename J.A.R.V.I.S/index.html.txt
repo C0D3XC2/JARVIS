@@ -14,8 +14,8 @@
     #notepad {
       top: 20px;
       right: 20px;
-      width: 30vw;
-      height: 60vh;
+      width: 40vw;
+      height: 70vh;
       border: 2px solid #00ffc8;
       background: rgba(0,0,0,0.2);
     }
@@ -70,7 +70,7 @@
     resizeHUD();
 
     // State
-    let energyLevel = 75;
+    let energyLevel = 59;
     let rotationSpeed = 0.5;
     let powerConsumption = 500;
     let showArm = false;
@@ -164,7 +164,7 @@
       ctx.save();
       ctx.translate(cx, cy);
       ctx.rotate(angle);
-      ctx.globalAlpha = 0.5;
+      ctx.globalAlpha = 0.7;
       ctx.drawImage(armImg, -iw/2, -ih/2, iw, ih);
       ctx.restore();
       ctx.globalAlpha = 1;
