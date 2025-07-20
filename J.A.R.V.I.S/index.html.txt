@@ -14,8 +14,8 @@
     #notepad {
       top: 20px;
       right: 20px;
-      width: 30vw;
-      height: 60vh;
+      width: 20vw;
+      height: 50vh;
       border: 2px solid #00ffc8;
       background: rgba(0,0,0,0.2);
     }
