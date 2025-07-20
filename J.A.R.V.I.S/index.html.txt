@@ -1,538 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Interactive JARVIS HUD + Notepad</title>
+  <style>
+    body, html { margin:0; padding:0; overflow:hidden; background:#000; }
+    canvas {
+      position: absolute;
+      touch-action: none;
+    }
+    #hud { top:0; left:0; width:100vw; height:100vh; }
+    #notepad {
+      top: 20px;
+      right: 20px;
+      width: 30vw;
+      height: 60vh;
+      border: 2px solid #00ffc8;
+      background: rgba(0,0,0,0.2);
+    }
+    .hud-button {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      font-size: 24px;
+      color: #00ffc8;
+      background: rgba(0, 255, 200, 0.1);
+      border: 2px solid #00ffc8;
+      border-radius: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+    /* Increase/Decrease next to reactor (center-left) */
+    #inc, #dec {
+      left: calc(50% - 15vw - 30px);
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    #inc { transform: translate(-50%, -80px); }
+    #dec { transform: translate(-50%, 10px); }
+    /* Eraser below notepad */
+    #eraser {
+      right: 20px;
+      top: calc(20px + 60vh + 10px);
+      width: auto;
+      padding: 0 12px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="hud"></canvas>
+  <canvas id="notepad"></canvas>
 
+  <button id="inc" class="hud-button">+</button>
+  <button id="dec" class="hud-button">–</button>
+  <button id="eraser" class="hud-button">Eraser</button>
 
-
+  <script>
+    // --- HUD setup ---
+    const hud = document.getElementById('hud');
+    const hctx = hud.getContext('2d');
 
     function resizeHUD() {
-
       hud.width = window.innerWidth;
-
       hud.height = window.innerHeight;
-
     }
-
     window.addEventListener('resize', resizeHUD);
-
     resizeHUD();
 
-
-
     // State
-
     let energyLevel = 75;
-
     let rotationSpeed = 0.5;
-
     let powerConsumption = 500;
-
     let showArm = false;
-
     const armImg = new Image();
-
     armImg.src = 'ironman_arm.png';
-
     let armLoaded = false;
-
     armImg.onload = () => armLoaded = true;
 
-
-
     // Buttons
-
     document.getElementById('inc').addEventListener('click', () => {
-
       rotationSpeed = Math.min(rotationSpeed + 0.1, 5);
-
     });
-
     document.getElementById('dec').addEventListener('click', () => {
-
       rotationSpeed = Math.max(rotationSpeed - 0.1, 0);
-
     });
-
-
 
     hud.addEventListener('click', () => showArm = !showArm);
-
     hud.addEventListener('touchstart', e => {
-
       e.preventDefault();
-
       showArm = !showArm;
-
     }, { passive: false });
 
-
-
     // --- Drawing HUD frames ---
-
     function drawGrid(ctx, width, height) {
-
       const step = 50;
-
       ctx.strokeStyle = 'rgba(0,255,200,0.1)';
-
       ctx.lineWidth = 0.5;
-
       for (let x=0; x<width; x+=step)
-
         for (let y=0; y<height; y+=step)
-
           ctx.strokeRect(x,y,step,step);
-
     }
-
     function drawArcReactor(ctx, w, h, ts) {
-
       const cx = w/2, cy = h/2;
-
       const radius = Math.min(w,h)*0.15;
-
-
-      const angle = ts/1000 * rotationSpeed * 2*Math.PI;
-
-
       const angle = ts/1000 * rotationSpeed * 2 * Math.PI;
 
-
-
       // rotating ring
-
       ctx.save();
-
-
-      ctx.translate(cx,cy);
-
-
       ctx.translate(cx, cy);
-
       ctx.rotate(angle);
-
       ctx.strokeStyle = 'rgba(0,255,200,0.8)';
-
       ctx.lineWidth = 4;
-
       ctx.beginPath();
-
-
-      ctx.arc(0,0,radius+10,0,2*Math.PI);
-
-
       ctx.arc(0, 0, radius+10, 0, 2 * Math.PI);
-
       ctx.stroke();
-
       ctx.restore();
-
-
 
       // segments
-
-
-      for (let i=0;i<12;i++){
-
-
       for (let i=0; i<12; i++){
-
         const a = angle + i/12*2*Math.PI;
-
-
-        const x1 = cx+Math.cos(a)*(radius-5);
-
-
-        const y1 = cy+Math.sin(a)*(radius-5);
-
-
-        const x2 = cx+Math.cos(a)*(radius+5);
-
-
-        const y2 = cy+Math.sin(a)*(radius+5);
-
-
         const x1 = cx + Math.cos(a)*(radius-5);
-
-
         const y1 = cy + Math.sin(a)*(radius-5);
-
-
         const x2 = cx + Math.cos(a)*(radius+5);
-
-
         const y2 = cy + Math.sin(a)*(radius+5);
-
         ctx.strokeStyle = 'rgba(0,255,200,0.9)';
-
         ctx.lineWidth = 2;
-
         ctx.beginPath();
-
-
-        ctx.moveTo(x1,y1);
-
-
-        ctx.lineTo(x2,y2);
-
-
         ctx.moveTo(x1, y1);
-
-
         ctx.lineTo(x2, y2);
-
         ctx.stroke();
-
       }
 
-
-
       // glow
-
       const glow = radius*0.5 + Math.sin(ts/300)*5;
-
-
-      const grad = ctx.createRadialGradient(cx,cy,0,cx,cy,glow);
-
-
-      grad.addColorStop(0,'rgba(0,255,200,0.8)');
-
-
-      grad.addColorStop(1,'rgba(0,255,200,0)');
-
-
       const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, glow);
-
-
       grad.addColorStop(0, 'rgba(0,255,200,0.8)');
-
-
       grad.addColorStop(1, 'rgba(0,255,200,0)');
-
       ctx.fillStyle = grad;
-
       ctx.beginPath();
-
-
-      ctx.arc(cx,cy,glow,0,2*Math.PI);
-
-
       ctx.arc(cx, cy, glow, 0, 2 * Math.PI);
-
       ctx.fill();
-
     }
-
     function drawRepulsors(ctx, w, h, ts) {
-
       const pts = [
-
         [50,50],[w-50,50],[50,h-50],[w-50,h-50]
-
       ];
-
-
-      const pulse = (Math.sin(ts/200)+1)/2;
-
-
       const pulse = (Math.sin(ts/200) + 1) / 2;
-
       pts.forEach(([x,y])=>{
-
-
-        ctx.fillStyle = `rgba(0,255,200,${0.4+pulse*0.6})`;
-
-
         ctx.fillStyle = `rgba(0,255,200,${0.4 + pulse*0.6})`;
-
         ctx.beginPath();
-
-
-        ctx.arc(x,y,20+pulse*10,0,2*Math.PI);
-
-
         ctx.arc(x, y, 20 + pulse*10, 0, 2 * Math.PI);
-
         ctx.fill();
-
       });
-
     }
-
     function drawHoloArm(ctx, w, h, ts) {
-
-
-      if (!showArm||!armLoaded) return;
-
-
-      const cx=w/2, cy=h/2;
-
-
-      const scale=0.5;
-
-
-      const angle = Math.sin(ts/2000)*0.2;
-
-
-      const iw=armImg.width*scale, ih=armImg.height*scale;
-
-
       if (!showArm || !armLoaded) return;
-
-
       const cx = w/2, cy = h/2;
-
-
       const scale = 0.5;
-
-
       const angle = Math.sin(ts/2000) * 0.2;
-
-
       const iw = armImg.width * scale, ih = armImg.height * scale;
-
       ctx.save();
-
-
-      ctx.translate(cx,cy);
-
-
       ctx.translate(cx, cy);
-
       ctx.rotate(angle);
-
-
-      ctx.globalAlpha=0.5;
-
-
-      ctx.drawImage(armImg,-iw/2,-ih/2,iw,ih);
-
-
       ctx.globalAlpha = 0.5;
-
-
       ctx.drawImage(armImg, -iw/2, -ih/2, iw, ih);
-
       ctx.restore();
-
-
-      ctx.globalAlpha=1;
-
-
       ctx.globalAlpha = 1;
-
     }
-
     function drawHUD(ts) {
-
       const w = hud.width, h = hud.height;
-
       hctx.clearRect(0,0,w,h);
-
-
-      drawGrid(hctx,w,h);
-
-
-      drawArcReactor(hctx,w,h,ts);
-
-
-      drawRepulsors(hctx,w,h,ts);
-
-
-      drawHoloArm(hctx,w,h,ts);
-
-
       drawGrid(hctx, w, h);
-
-
       drawArcReactor(hctx, w, h, ts);
-
-
       drawRepulsors(hctx, w, h, ts);
-
-
       drawHoloArm(hctx, w, h, ts);
 
-
-
       // text overlays
-
-
-      hctx.fillStyle='rgba(0,255,200,1)';
-
-
-      hctx.font='16px monospace';
-
-
-      const now=new Date();
-
-
-      hctx.fillText(`DATE: ${now.toLocaleDateString('en-GB')}`,20,30);
-
-
-      hctx.fillText(`TIME: ${now.toLocaleTimeString('en-US',{hour12:false})}`,20,60);
-
-
-      hctx.fillText(`ENERGY LEVEL : ${energyLevel}%`,20,100);
-
-
-      hctx.fillText(`ROTATION      : ${rotationSpeed.toFixed(1)} rev/sec`,20,125);
-
-
-      hctx.fillText(`POWER CONSUMP.: ${powerConsumption} kW`,20,150);
-
-
-      hctx.fillText('EMAIL: tony@starkindustries.com',20,h-30);
-
-
-      hctx.fillText('-- JARVIS HUD v1.4',20,h-10);
-
-
       hctx.fillStyle = 'rgba(0,255,200,1)';
-
-
       hctx.font = '16px monospace';
-
-
       const now = new Date();
-
-
       hctx.fillText(`DATE: ${now.toLocaleDateString('en-GB')}`, 20, 30);
-
-
       hctx.fillText(`TIME: ${now.toLocaleTimeString('en-US',{hour12:false})}`, 20, 60);
-
-
       hctx.fillText(`ENERGY LEVEL : ${energyLevel}%`, 20, 100);
-
-
       hctx.fillText(`ROTATION      : ${rotationSpeed.toFixed(1)} rev/sec`, 20, 125);
-
-
       hctx.fillText(`POWER CONSUMP.: ${powerConsumption} kW`, 20, 150);
-
-
       hctx.fillText('EMAIL: tony@starkindustries.com', 20, h-30);
-
-
       hctx.fillText('-- JARVIS HUD v1.4', 20, h-10);
-
     }
-
     requestAnimationFrame(function loop(ts){
-
       drawHUD(ts);
-
       requestAnimationFrame(loop);
-
     });
-
-
-
 
 
     // --- Notepad setup ---
-
     const pad = document.getElementById('notepad');
-
     const pctx = pad.getContext('2d');
-
     function resizePad(){
-
       pad.width = pad.clientWidth;
-
       pad.height = pad.clientHeight;
-
     }
-
-
-    window.addEventListener('resize',resizePad);
-
-
     window.addEventListener('resize', resizePad);
-
     resizePad();
 
-
-
     let drawing=false, erasing=false;
-
     let lastX=0, lastY=0;
 
-
-
     function setMode(){
-
       pctx.globalCompositeOperation = erasing ? 'destination-out' : 'source-over';
-
       document.getElementById('eraser').textContent = erasing ? 'Pen' : 'Eraser';
-
     }
-
     document.getElementById('eraser').addEventListener('click', ()=>{
-
       erasing = !erasing;
-
       setMode();
-
     });
-
     setMode();
 
-
-
     function pointerDown(e){
-
       drawing = true;
-
       const rect = pad.getBoundingClientRect();
-
       lastX = (e.clientX - rect.left) * (pad.width/rect.width);
-
       lastY = (e.clientY - rect.top)  * (pad.height/rect.height);
-
     }
-
     function pointerMove(e){
-
       if (!drawing) return;
-
       const rect = pad.getBoundingClientRect();
-
       const x = (e.clientX - rect.left) * (pad.width/rect.width);
-
       const y = (e.clientY - rect.top)  * (pad.height/rect.height);
-
       pctx.lineJoin = 'round';
-
       pctx.lineCap = 'round';
-
       pctx.lineWidth = 4;
-
       pctx.strokeStyle = '#00ffc8';
-
       pctx.beginPath();
-
       pctx.moveTo(lastX,lastY);
-
       pctx.lineTo(x,y);
-
       pctx.stroke();
-
       lastX = x; lastY = y;
-
     }
-
     function pointerUp(){ drawing = false; }
 
-
-
     pad.addEventListener('pointerdown', pointerDown);
-
     pad.addEventListener('pointermove', pointerMove);
-
     document.addEventListener('pointerup', pointerUp);
-
   </script>
-
 </body>
-
 </html>
-
